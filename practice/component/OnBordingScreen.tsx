@@ -15,7 +15,7 @@ const OnBordingScreen: React.FC<OnBordingScreen> = ({ navigation }) => {
 				}}
 				key={index}
 			>
-				<Text style={styles.titlestyle}> {color}</Text>
+				<Text onPress={()=>navigation.navigate("Animation")} style={styles.titlestyle}> {color}</Text>
 			</View>
 		);
 	};
@@ -25,7 +25,7 @@ const OnBordingScreen: React.FC<OnBordingScreen> = ({ navigation }) => {
 				<FlatList
 					numColumns={2}
 					style={styles.flatlistStyle}
-					data={[ 'Music', 'vedio', 'message', 'shopping' ]}
+					data={[ 'Animation', 'vedio', 'message', 'shopping' ]}
 					renderItem={({ item, index }) => renderitem(item, index)}
 				/>
 			</View>
