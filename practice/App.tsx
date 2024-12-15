@@ -11,11 +11,8 @@ function Testaa(){
 }
 function App() {
   const linking = {
-    
-       prefixes: ["https://example"],  
-     
+       prefixes: ["https://srikanth.module"],  
        config: {
-        
          screens: {
           OnBordingScreen: {     // ====> Screen name to navigate
              path: "demo/:id",   // ===> path to which given url should match
