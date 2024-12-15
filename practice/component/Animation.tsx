@@ -53,8 +53,8 @@ const Backdrop = ({ scrollX }:any) => {
               style={{
                 position: 'absolute',
                 transform:[{translateX}],
+                 opacity:0.8,
                 height:height,
-                // overflow: 'hidden',
                 backgroundColor:"red",
                 width:400
               }}
@@ -105,10 +105,9 @@ export default function Animation() {
       inputRange,
       outputRange:[-responsiveWidth(100) *0.7, 0, width * 0.7]
     })
-    console.log
 					return (
 						<View style={{ width: responsiveWidth(100), justifyContent: 'center', alignItems: 'center' }}>
-                <Text style={{position:"absolute",zIndex:100,color:"white",alignSelf:"center"}}>{"MOVIE : "+(item.index+1)}</Text>
+                {/* <Text style={{position:"absolute",zIndex:100,color:"white",alignSelf:"center"}}>{"MOVIE : "+(item.index+1)}</Text> */}
                 <View
 								style={{
 									borderRadius: 18,
