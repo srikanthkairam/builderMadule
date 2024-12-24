@@ -1,0 +1,313 @@
+import React from "react";
+import { Alert, Image, Platform } from "react-native";
+const RNHTMLtoPDF = require('react-native-html-to-pdf').default;
+import FileViewer from 'react-native-file-viewer';
+import RNFS from 'react-native-fs';
+import StorageProvider from '../../framework/src/StorageProvider';
+export const genratePdf = async (image?: string, username?: string, preparedBy?: string, preparedByEmail?: string) => {
+    const imageBase6423 = !image ? "" : await RNFS.readFile(`${RNFS.DocumentDirectoryPath}/${image}` as never, 'base64');
+    const imageDataUrllink = imageBase6423 ? `data:image/png;base64,${imageBase6423}` : "";
+    const Projects = await StorageProvider.get("AllProjectsData");
+    const allProjects = JSON.parse(Projects);
+    const currentActive = await StorageProvider.get("selectedProjectId");
+    let currentActiveProject = JSON.parse(currentActive);
+
+    // Find current project
+    const data = allProjects.find((item) => item.id === currentActiveProject);
+
+    // Filter samples that have a sampleImage
+    const samplesWithImages = data.samples.filter((sample) => sample.sampleImage);
+
+    // Group samples by sampleLocationID
+    const groupedByLocationID = samplesWithImages.reduce((acc, sample) => {
+        if (!acc[sample.sampleLocationID]) {
+            acc[sample.sampleLocationID] = [];
+        }
+        acc[sample.sampleLocationID].push(sample);
+        return acc;
+    }, {});
+
+    // Generate Base64 image if provided
+    const imageBase64 = image ? await RNFS.readFile(`${RNFS.DocumentDirectoryPath}/${image}`, 'base64') : '';
+    const imageDataUrl = imageBase64 ? `data:image/png;base64,${imageBase64}` : '';
+
+    // Helper function to convert image to Base64
+    const getImageBase64 = async (imagePath: string) => {
+        return RNFS.readFile(`${RNFS.DocumentDirectoryPath}/${imagePath}`, 'base64');
+    };
+
+    // Build HTML for image sections
+    const htmlSections = await Promise.all(
+        Object.keys(groupedByLocationID).map(async locationID => {
+            const samplesHTML = await Promise.all(groupedByLocationID[locationID].map(async (sample) => {
+                const imageBase64 = await getImageBase64(sample.sampleImage);
+                const imageDataUrl = `data:image/jpeg;base64,${imageBase64}`;
+                return `
+            <div class="image-item">
+              <img src="${imageDataUrl}" alt="${sample.sampleDescription}">
+             ${sample.sampleid + sample.sampleLocation}ghhghjaushahjbsfhhj asuifbaf ahbfibiuaf aihfiya afifiufrrd i 
+            </div>
+          `;
+            }));
+
+            // Create grid layout for dynamic image alignment (up to 3 images per row)
+            const gridLayout = samplesHTML.reduce((acc: string[], html, index) => {
+                if (index % 2 === 0) acc.push('<div class="image-row">');  // Start a new row every 3 images
+                acc.push(html);
+                if (index % 2 === 1 || index === samplesHTML.length - 1) acc.push('</div>');  // Close the row after every 3rd image or the last image
+                return acc;
+            }, []).join('');
+
+            return `
+          <div class="marginTop:100">
+            <h2>Location ID: ${locationID}</h2>
+            ${gridLayout}
+          </div>
+        `;
+        })
+    );
+
+    // Build HTML for the table page
+    const tableHtml = `
+      <div class="table-section">
+        <h2>Project Data Table</h2>
+        <table>
+          <thead>
+            <tr>
+              <th>Sample ID</th>
+              <th>Sample Name</th>
+              <th>Section Name</th>
+              <th>Meterial</th>
+              <th>Analytical Results</th>
+              <th>Regulatory Results</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${data.samples.map((sample) => `
+              <tr>
+                <td>${sample.sampleid}</td>
+                <td>${sample.sampleDescription}</td>
+                <td>${sample.sampleLocation}</td>
+                <td>${sample.sampleLocation}</td>
+                <td>${sample.sampleid}</td>
+                <td>${sample.sampleid}</td>
+              </tr>
+            `).join('')}
+          </tbody>
+        </table>
+      </div>
+    `;
+
+    let options = {
+        html: `<html>
+      <head>
+          <title>Pre-Renovation Asbestos Survey</title>
+          <style>
+              body {
+                  font-family: Arial, sans-serif;
+                  margin: 20px;
+              }
+              .page {
+                margin-bottom: 20px;
+              }
+              .image-section {
+                page-break-before: always; /* Ensure only the image sections start on a new page */
+              }
+              .image-row {
+                display: flex;
+                flex-wrap: wrap;
+                margin-bottom: 20px;
+              }
+              .image-item {
+                width: 50%; 
+                /* 3 images per row, flex will handle spacing */
+                margin-bottom: 20px;
+                text-align: center;
+              }
+              .image-item img {
+                width: 300;
+                height: 200;
+              }
+              .image-info {
+                font-size: 12px;
+                margin-top: 5px;
+              }
+              table {
+                width: 100%;
+                border-collapse: collapse;
+                margin-top: 20px;
+              }
+              th, td {
+                border: 1px solid #ddd;
+                padding: 8px;
+                text-align: left;font-size: 8px;
+              }
+              th {
+                background-color: 	#A9A9A9;
+                font-size: 8px;
+              }
+              @media print { * { -webkit-print-color-adjust: exact !important; } }
+              tr{
+              }
+              .table-section {
+                margin-top: 20px;
+              }
+      .titlename {
+          font-size: 18px;
+          font-weight: 800;
+      }
+              header {
+                  text-align: center;
+                  margin-bottom: 20px;
+              }
+      
+              .logo {
+                  width: 150px;
+                  height: auto;
+              }
+      
+              .address {
+                  display:flex;
+                  flex-direction:column;
+                  gap:5px;
+                  font-size: 18px;
+                  margin-top: 10px;
+              }
+      
+              .survey-info {
+                 
+              }
+      
+              .survey-details {
+                  width: 45%;
+              }
+              .survey-detailsdata {
+                 display: flex;
+                 flex-direction: column;
+                 justify-content: space-between;
+              }
+      
+              .survey-location {
+                  display:flex;
+                  width: 70%;
+                  height:350px; 
+              }
+              .survey-location img {
+                  width: 100%;
+                  height: auto;
+                  margin-bottom: 10px;
+                  background-color: green;
+                  justify-content:"center";
+              }
+      
+              footer {
+                  text-align: center;
+                  font-size: 12px;
+                  margin-top: 20px;
+              }
+              .survey-title{
+                  display:flex;
+                  justify-content:center;
+                  font-size: 35px;
+                  font-weight: 800;
+              }
+              .survey-link{
+                width:800px;
+            }
+                  head{
+                   display: flex}
+          </style>
+      </head>
+      <body>
+      <div>
+          <div >
+          <div  style="display: flex; justify-content: space-between;">
+              <img style="height: 100; width: 300;" src="${"../../blocks/email-account-login/assets/dots.png"}" alt="ClearVu Inspections" class="logo">
+             
+          </div>
+          <p class="survey-title">Pre-Renovation Asbestos Survey</p>
+          <div style="width: 100%; justify-content:center; display: flex;">
+              <img src="${imageDataUrllink}" style="width: 75%;align-content:center; height: 300px;" alt="Site Location">
+          </div>
+          <div style=" margin-top: 30px; margin-left: 60px;">
+              <div style=" display: flex; flex-direction: row;justify-content:space-evenly; width:100% ">
+                  <div class="survey-link">
+                      <p class="titlename">Project Number</p>
+                         <p style="font-size: 12px;">10073<br>
+                          04.08.2022 - Original<br>
+                          06.06.22 - Joint Tadive<br>
+                          08.24.22 - Caulk @ 60% Drawings<br>
+                          10.2.22 - COC & 100%<br>
+                          </p>
+                  </div>
+      
+                  <div class="survey-link">
+                      <p class="titlename">Prepared For</p>
+                     <p style="font-size: 12px;">${username}</br>
+                      3 Cerrone Commercial Drive</br>
+                      Albany, Albany 12205</br>
+                      </p>
+                  </div>
+              </div>
+              <div >
+              <div style="">
+              <div style=" display: flex; flex-direction: row;justify-content:space-evenly; width:100%  ">
+                  <div class="survey-link">
+                      <p class="titlename">Site Location</p>
+                        <p style="font-size: 12px;" > 10073<br>
+                          04.08.2022 - Original<br>
+                          06.06.22 - Joint Tadive<br>
+                          08.24.22 - Caulk @ 60% Drawings<br>
+                          10.2.22 - COC & 100%<br>
+                          </p>
+                  </div>
+                  <div class="survey-link">
+                      <p class="titlename">Prepared By</p>
+                     <p style="font-size: 12px;">${preparedBy}</br>
+                      ${preparedByEmail}</br>
+                      Albany, Albany 12205</br>
+                      </p>
+                  </div>
+              </div>
+              <div >
+      </div>
+      </div>
+      <div >
+      <div class="image-section">
+      ${htmlSections.join('')}
+      <div>
+      <div class="image-section">
+      ${tableHtml}
+      <div>
+      </div>
+      </div>
+      </body>
+      </html>`,
+        fileName: username,
+        directory: 'Documents',
+    };
+
+    if (Platform.OS === 'ios') {
+        options.directory = '';
+    }
+
+    try {
+        const file = await RNHTMLtoPDF.convert(options);
+        if (!file.filePath) return;
+        const filename = file.filePath.split('/').pop();
+        const string = Date.now()
+        const destinationPath = `${RNFS.DocumentDirectoryPath}/myImages/${string}${filename}`;
+        const path = `${RNFS.DocumentDirectoryPath}/myImages`;
+        const directoryExists = await RNFS.exists(path);
+        if (!directoryExists) { await RNFS.mkdir(path); }
+        await RNFS.moveFile(file.filePath, destinationPath);
+        const relativePath = `myImages/${string}${filename}`;
+        await FileViewer.open(destinationPath, { showOpenWithDialog: true })
+        const pdfData = await StorageProvider.get("AllPdfsData");
+        const allPdfsData = pdfData ? JSON.parse(pdfData) : []
+        await StorageProvider.set("AllPdfsData", (JSON.stringify([...allPdfsData, { filePath: relativePath, id: Date.now(), filename: filename }])))
+    }
+    catch (error) {
+        Alert.alert('Error creating PDF:', "please try again");
+    }
+};
